@@ -1,5 +1,5 @@
 {
-  "name": "facturx",
+  "name": "@stafyniaksacha/facturx",
   "version": "0.1.0",
   "description": "Factur-X and Order-X generation library for European e-invoicing standard",
   "repository": "sstafyniak/facturx",

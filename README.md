@@ -8,19 +8,19 @@ Generate and extract Factur-X and Order-X invoices in TypeScript, using [pdf-lib
 
 ```bash
 # Usage
-npx facturx --help
+npx @stafyniaksacha/facturx --help
 
 # Generate a Factur-X/Order-X PDF-A/3 invoice
-npx facturx generate \
+npx @stafyniaksacha/facturx generate \
   --pdf input.pdf
   --xml input.xml
   --output output.pdf
 
 # Extract a Factur-X/Order-X XML from a PDF
-npx facturx extract input.pdf > output.xml
+npx @stafyniaksacha/facturx extract input.pdf > output.xml
 
 # Check a Factur-X/Order-X XML file
-npx facturx check input.xml \
+npx @stafyniaksacha/facturx check input.xml \
   --flavor facturx \ # autodetects the flavor if not provided
   --level en16931 \ # autodetects the level if not provided
 ```
@@ -29,11 +29,11 @@ npx facturx check input.xml \
 
 
 ```bash
-npm install facturx
+npm install @stafyniaksacha/facturx
 ```
 
 ```typescript
-import { generate, extract, check } from 'facturx'
+import { generate, extract, check } from '@stafyniaksacha/facturx'
 
 // Generate a Factur-X/Order-X PDF-A/3 invoice
 const buffer = await generate({
