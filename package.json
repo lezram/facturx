@@ -30,8 +30,9 @@
   },
   "scripts": {
     "prepack": "unbuild",
+    "dev": "unbuild --watch",
     "build": "unbuild",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest"
   },
   "dependencies": {
     "citty": "^0.1.6",
