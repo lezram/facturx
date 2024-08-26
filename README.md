@@ -7,9 +7,14 @@ Generate and extract Factur-X and Order-X invoices in TypeScript, using [pdf-lib
 ### CLI
 
 ```bash
-# Usage
+# Usage (Node.js)
 npx @stafyniaksacha/facturx --help
 
+# Usage (Bun)
+bunx @stafyniaksacha/facturx --help
+```
+
+```bash
 # Generate a Factur-X/Order-X PDF-A/3 invoice
 npx @stafyniaksacha/facturx generate \
   --pdf input.pdf
@@ -33,19 +38,24 @@ npm install @stafyniaksacha/facturx
 ```
 
 ```typescript
+import { readFile } from 'node:fs/promises' 
+
 import { generate, extract, check } from '@stafyniaksacha/facturx'
+
+const pdf = await readFile('/path/to/input.pdf')
+const xml = await readFile('/path/to/input.xml')
 
 // Generate a Factur-X/Order-X PDF-A/3 invoice
 const buffer = await generate({
-  pdf: '/path/to/input.pdf', // or buffer or PDFDocument
-  xml: '/path/to/input.xml', // or buffer or XMLDocument
+  pdf, // string, buffer or PDFDocument
+  xml, // string, buffer or XMLDocument
 
   // Optional
   check: true, // set to false to disable the check
   flavor: 'facturx', // autodetects the flavor if not provided
   level: 'en16931', // autodetects the level if not provided
   language: 'en-GB',
-  meta: {
+  meta: { // extracted from xml if not provided
     author: 'John Doe',
     title: 'John Doe',
     subject: 'John Doe',
@@ -55,7 +65,7 @@ const buffer = await generate({
 
 // Extract a Factur-X/Order-X XML from a PDF
 const [filename, content] = await extract({
-  pdf: '/path/to/input.pdf', // or buffer or PDFDocument
+  pdf, // string, buffer or PDFDocument
 
   // Optional
   check: true, // set to false to disable the check
@@ -65,14 +75,13 @@ const [filename, content] = await extract({
 
 // Extract a Factur-X/Order-X XML from a PDF
 const valid = await check({
-  xml: '/path/to/input.xml', // or buffer or XMLDocument
+  xml, // string, buffer or XMLDocument
 
   // Optional
   flavor: 'facturx', // autodetects the flavor if not provided
   level: 'en16931', // autodetects the level if not provided
 })
 ```
-
 
 ## Usefull links
 

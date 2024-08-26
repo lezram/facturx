@@ -1,11 +1,132 @@
-import { describe, expect, test } from 'vitest'
+import { Buffer } from 'node:buffer'
+import { describe, expect, test, vi } from 'vitest'
 import { check } from '../dist/index.mjs'
+import { 
+  VALID_FACTURX_MINIMUM,
+  VALID_FACTURX_EN16931,
+  VALID_ORDERX_BASIC,
+} from './fixtures'
 
 describe('check', () => {
-  test('should autodetect facturx flavor and level', async () => {
-    const xml = './examples/Facture_FR_EN16931.xml'
+  test('should accept xml input', async () => {
+    const checkSpy = vi.fn(check)
     const options = {
-      xml,
+      xml: VALID_FACTURX_MINIMUM,
+      flavor: '',
+      level: ''
+    }
+    await checkSpy(options)
+
+    expect(checkSpy).toHaveResolved()
+  })
+  
+  test('should accept buffer input', async () => {
+    const checkSpy = vi.fn(check)
+    const options = {
+      xml: Buffer.from(VALID_FACTURX_MINIMUM),
+      flavor: '',
+      level: ''
+    }
+    await checkSpy(options)
+
+    expect(checkSpy).toHaveResolved()
+  })
+  
+  test('should throw with non xml input', async () => {
+    const options = {
+      xml: 'not-xml',
+      flavor: '',
+      level: ''
+    }
+
+    expect(() => check(options)).rejects.toThrowError("Start tag expected, '<' not found")
+  })
+  
+  test('should throw with invalid xml', async () => {
+    const options = {
+      xml: '<?xml version="1.0" encoding="UTF-8"?><test></test>',
+      flavor: '',
+      level: ''
+    }
+
+    expect(() => check(options)).rejects.toThrowError("XML not recognized as Factur-X, Order-X or ZUGFeRD")
+  })
+
+  test('should pass with proper flavor provided', async () => {
+    const options = {
+      xml: VALID_FACTURX_EN16931,
+      flavor: 'facturx',
+    }
+    const valid = await check(options)
+
+    expect(valid).toBe(true)
+  })
+  
+  test('should pass with proper flavor and level provided', async () => {
+    const options = {
+      xml: VALID_FACTURX_EN16931,
+      flavor: 'facturx',
+      level: 'en16931'
+    }
+    const valid = await check(options)
+
+    expect(valid).toBe(true)
+  })
+
+  test('should fail with invalid level', async () => {
+    const options = {
+      xml: VALID_FACTURX_EN16931,
+      flavor: 'facturx',
+      level: 'minimum'
+    }
+    const valid = await check(options)
+
+    expect(valid).toBe(false)
+  })
+
+  test('should fail with invalid flavor', async () => {
+    const options = {
+      xml: VALID_FACTURX_EN16931,
+      flavor: 'orderx',
+      level: 'basic'
+    }
+    const valid = await check(options)
+
+    expect(valid).toBe(false)
+  })
+
+  test('should throw if unknown flavor is provided', async () => {
+    const options = {
+      xml: VALID_FACTURX_EN16931,
+      flavor: 'unknown'
+    }
+
+    expect(() => check(options)).rejects.toThrowError('Unknown schema flavor: "unknown"')
+  })
+
+  test('should throw if unknown facturx level is provided', async () => {
+    const options = {
+      xml: VALID_FACTURX_EN16931,
+      flavor: 'facturx',
+      level: 'unknown'
+    }
+
+    expect(() => check(options)).rejects.toThrowError('Unknown Factur-X level: "unknown"')
+  })
+
+  test('should throw if unknown orderx level is provided', async () => {
+    const options = {
+      xml: VALID_FACTURX_EN16931,
+      flavor: 'orderx',
+      level: 'unknown'
+    }
+
+    expect(() => check(options)).rejects.toThrowError('Unknown Order-X level: "unknown"')
+  })
+
+  test('should autodetect facturx flavor and level', async () => {
+    const options = {
+      xml: VALID_FACTURX_EN16931,
       flavor: '',
       level: ''
     }
@@ -17,9 +138,8 @@ describe('check', () => {
   })
 
   test('should autodetect orderx flavor and level', async () => {
-    const xml = './examples/ORDER-X_EX11_ORDER_PICK-UP-BASIC.xml'
     const options = {
-      xml,
+      xml: VALID_ORDERX_BASIC,
       flavor: '',
       level: ''
     }
@@ -28,84 +148,5 @@ describe('check', () => {
     expect(valid).toBe(true)
     expect(options.flavor).toBe('orderx')
     expect(options.level).toBe('basic')
-  })
-
-  test('should pass with flavor provided', async () => {
-    const xml = './examples/Facture_FR_EN16931.xml'
-    const options = {
-      xml,
-      flavor: 'facturx',
-    }
-    const valid = await check(options)
-
-    expect(valid).toBe(true)
-  })
-  
-  test('should pass with flavor and level provided', async () => {
-    const xml = './examples/Facture_FR_EN16931.xml'
-    const options = {
-      xml,
-      flavor: 'facturx',
-      level: 'en16931'
-    }
-    const valid = await check(options)
-
-    expect(valid).toBe(true)
-  })
-
-  test('should fail with invalid level', async () => {
-    const xml = './examples/Facture_FR_EN16931.xml'
-    const options = {
-      xml,
-      flavor: 'facturx',
-      level: 'minimum'
-    }
-    const valid = await check(options)
-
-    expect(valid).toBe(false)
-  })
-
-  test('should fail with invalid flavor', async () => {
-    const xml = './examples/Facture_FR_EN16931.xml'
-    const options = {
-      xml,
-      flavor: 'orderx',
-      level: 'basic'
-    }
-    const valid = await check(options)
-
-    expect(valid).toBe(false)
-  })
-
-  test('should throw if unknown flavor is provided', async () => {
-    const xml = './examples/Facture_FR_EN16931.xml'
-    const options = {
-      xml,
-      flavor: 'unknown'
-    }
-
-    expect(() => check(options)).rejects.toThrowError('Unknown schema flavor: "unknown"')
-  })
-
-  test('should throw if unknown facturx level is provided', async () => {
-    const xml = './examples/Facture_FR_EN16931.xml'
-    const options = {
-      xml,
-      flavor: 'facturx',
-      level: 'unknown'
-    }
-
-    expect(() => check(options)).rejects.toThrowError('Unknown Factur-X level: "unknown"')
-  })
-
-  test('should throw if unknown orderx level is provided', async () => {
-    const xml = './examples/Facture_FR_EN16931.xml'
-    const options = {
-      xml,
-      flavor: 'orderx',
-      level: 'unknown'
-    }
-
-    expect(() => check(options)).rejects.toThrowError('Unknown Order-X level: "unknown"')
   })
 })

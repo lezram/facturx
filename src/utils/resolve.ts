@@ -1,5 +1,4 @@
-import { readFile } from "node:fs/promises"
-import { resolve } from "node:path"
+import { Buffer } from "node:buffer"
 import { parseXmlAsync, XMLDocument, XMLParseOptions } from "libxmljs"
 import { LoadOptions, PDFDocument } from "pdf-lib"
 
@@ -13,12 +12,7 @@ export async function resolveXml(
     return xml
   }
 
-  if (xml instanceof Buffer) {
-    return parseXmlAsync(xml, options)
-  }
-
-  const buffer = await readFile(resolve(xml))
-  return parseXmlAsync(buffer, options)
+  return await parseXmlAsync(xml, options)
 }
 
 
@@ -30,10 +24,5 @@ export async function resolvePdf(
     return pdf
   }
 
-  if (pdf instanceof Buffer) {
-    return await PDFDocument.load(pdf, options)
-  }
-
-  const buffer = await readFile(resolve(pdf))
-  return await PDFDocument.load(buffer, options)
+  return await PDFDocument.load(pdf, options)
 }

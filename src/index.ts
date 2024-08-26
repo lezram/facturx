@@ -1,9 +1,7 @@
-import { readFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
 import { Buffer } from 'node:buffer'
 import pkg from '../package.json' assert { type: 'json' }
 
-import { parseXmlAsync, XMLDocument } from 'libxmljs'
+import { XMLDocument } from 'libxmljs'
 import {
   PDFDocument,
   AFRelationship,
@@ -23,13 +21,13 @@ export async function generate(options: {
   language?: string
   meta?: PdfMetadata
 }) {
-  const xmlDoc =  await resolveXml(options.xml)
+  const xml =  await resolveXml(options.xml)
 
-  options.flavor ||= getFlavor(xmlDoc)
-  options.level ||= getLevel(xmlDoc)
+  options.flavor ||= getFlavor(xml)
+  options.level ||= getLevel(xml)
 
   if (options.check === true && !await check({
-    xml: xmlDoc,
+    xml,
     flavor: options.flavor,
     level: options.level,
   })) {
@@ -39,7 +37,7 @@ export async function generate(options: {
   let meta = options.meta
 
   if (!meta) {
-    const info = await extractBaseInfo(xmlDoc)
+    const info = await extractBaseInfo(xml)
     meta = baseInfo2PdfMetadata(info)
   }
 
@@ -64,9 +62,9 @@ export async function generate(options: {
   }
 
   const now = new Date()
-  const pdfDoc = await resolvePdf(options.pdf)
+  const pdf = await resolvePdf(options.pdf)
   
-  await pdfDoc.attach(xmlDoc.toString(), filename, {
+  await pdf.attach(xml.toString(), filename, {
     afRelationship: AFRelationship.Data,
     mimeType: 'application/xml',
     creationDate: now,
@@ -75,18 +73,18 @@ export async function generate(options: {
   })
 
   if (options.language) {
-    pdfDoc.setLanguage(options.language)
+    pdf.setLanguage(options.language)
   }
-  pdfDoc.setCreationDate(now)
-  pdfDoc.setModificationDate(now)
+  pdf.setCreationDate(now)
+  pdf.setModificationDate(now)
 
-  pdfDoc.setTitle(meta.title)
-  pdfDoc.setSubject(meta.subject)
-  pdfDoc.setAuthor(meta.author)
-  pdfDoc.setKeywords(meta.keywords)
-  pdfDoc.setCreator(`${pkg.name} npm lib v${pkg.version} (https://github.com/${pkg.repository})`)
+  pdf.setTitle(meta.title)
+  pdf.setSubject(meta.subject)
+  pdf.setAuthor(meta.author)
+  pdf.setKeywords(meta.keywords)
+  pdf.setCreator(`${pkg.name} npm lib v${pkg.version} (https://github.com/${pkg.repository})`)
 
-  return await pdfDoc.save()
+  return await pdf.save()
 }
 
 export async function extract(options: {
@@ -97,9 +95,9 @@ export async function extract(options: {
 }) {
   let file = null
 
-  const pdfDoc = await resolvePdf(options.pdf)
+  const pdf = await resolvePdf(options.pdf)
   
-  const attachments = extractAttachments(pdfDoc)
+  const attachments = extractAttachments(pdf)
 
   if (attachments?.length) {
     for (const attachment of attachments) {
@@ -141,19 +139,17 @@ export async function extract(options: {
     throw new Error('No attachment found')
   }
 
-  const xmlDoc = await parseXmlAsync(Buffer.from(file.data), {
-    encoding: 'utf8',
-  })
+  const xml = await resolveXml(Buffer.from(file.data))
 
-  if (options.check !== true && !await check({
-    xml: xmlDoc,
+  if (options.check === true && !await check({
+    xml,
     flavor: options.flavor,
     level: options.level,
   })) {
     throw new Error('Invalid XML')
   }
 
-  return [file.name, xmlDoc.toString()] as const
+  return [file.name, xml.toString()] as const
 }
 
 export async function check(options: {
@@ -161,11 +157,11 @@ export async function check(options: {
   flavor?: string,
   level?: string,
 }): Promise<boolean> {
-  const xmlDoc = await resolveXml(options.xml)
+  const xml = await resolveXml(options.xml)
 
-  options.flavor ||= getFlavor(xmlDoc)
-  options.level ||= getLevel(xmlDoc)
+  options.flavor ||= getFlavor(xml)
+  options.level ||= getLevel(xml)
 
-  const xsdDoc = await getXsd(options.flavor, options.level)
-  return xmlDoc.validate(xsdDoc) as boolean
+  const xsd = await getXsd(options.flavor, options.level)
+  return xml.validate(xsd) as boolean
 }

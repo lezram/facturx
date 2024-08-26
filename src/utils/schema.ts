@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { resolve, join } from 'node:path'
 import { format, parse } from 'date-fns'
 
@@ -48,8 +49,11 @@ export async function getFacturxXsd(level: FACTURX_SCHEMA_TYPE) {
     throw new Error(`Unknown Factur-X level: "${level}"`)
   }
 
+  // @todo: replace file read with module import
   const url = resolve(join(import.meta.dirname, '..', FACTURX_SCHEMA[level]))
-  return await resolveXml(url, {
+  const buffer = await readFile(url)
+  
+  return await resolveXml(buffer, {
     url,
   })
 }
@@ -58,8 +62,11 @@ export async function getOrderxXsd(level: ORDERX_SCHEMA_TYPE) {
     throw new Error(`Unknown Order-X level: "${level}"`)
   }
 
+  // @todo: replace file read with module import
   const url = resolve(join(import.meta.dirname, '..', ORDERX_SCHEMA[level]))
-  return await resolveXml(url, {
+  const buffer = await readFile(url)
+
+  return await resolveXml(buffer, {
     url,
   })
 }
@@ -115,7 +122,7 @@ export function getFlavor(fileDoc: XMLDocument) {
     case 'CrossIndustryDocument':
       return 'zugferd'
   }
-  throw new Error(`Unknown schema flavor: "${tag}"`)
+  throw new Error(`XML not recognized as Factur-X, Order-X or ZUGFeRD`)
 }
 
 // export function getOrderXLevel(fileDoc) {

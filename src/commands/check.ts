@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { defineCommand } from 'citty'
 
 import { check } from '../index'
@@ -25,13 +27,19 @@ export default defineCommand({
     },
   },
   run: async (args) => {
+    const xml = await readFile(resolve(args.args.xml), 'utf8')
     const options = {
-      xml: args.args.xml,
+      xml,
       flavor: args.args.flavor,
       level: args.args.level,
     }
     const valid = await check(options)
 
-    console.table({ ...options, valid })
+    if (!valid) {
+      console.error(`Invalid XML format (${options.flavor} - ${options.level})`)
+      process.exit(1)
+    }
+
+    console.log(`Valid XML format (${options.flavor} - ${options.level})`)
   }
 })

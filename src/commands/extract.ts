@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { defineCommand } from 'citty'
 
@@ -37,8 +37,10 @@ export default defineCommand({
     },
   },
   run: async (args) => {
+    const pdf = await readFile(resolve(args.args.pdf))
+
     const [file, content] = await extract({
-      pdf: args.args.pdf,
+      pdf,
       flavor: args.args.flavor,
       level: args.args.level,
       check: args.args.check,
