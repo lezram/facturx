@@ -1,6 +1,6 @@
 {
   "name": "@stafyniaksacha/facturx",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Factur-X and Order-X generation library for European e-invoicing standard",
   "repository": "stafyniaksacha/facturx",
   "keywords": ["factur-x", "order-x", "e-invoicing", "pdf", "xml", "european", "en16931"],
