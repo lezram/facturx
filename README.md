@@ -17,8 +17,8 @@ bunx @stafyniaksacha/facturx --help
 ```bash
 # Generate a Factur-X/Order-X PDF-A/3 invoice
 npx @stafyniaksacha/facturx generate \
-  --pdf input.pdf
-  --xml input.xml
+  --pdf input.pdf \
+  --xml input.xml \
   --output output.pdf
 
 # Extract a Factur-X/Order-X XML from a PDF
@@ -27,7 +27,7 @@ npx @stafyniaksacha/facturx extract input.pdf > output.xml
 # Check a Factur-X/Order-X XML file
 npx @stafyniaksacha/facturx check input.xml \
   --flavor facturx \ # autodetects the flavor if not provided
-  --level en16931 \ # autodetects the level if not provided
+  --level en16931 # autodetects the level if not provided
 ```
 
 ### Node.js
