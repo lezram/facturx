@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { resolve, join } from 'node:path'
+import { resolve, join, dirname } from 'node:path'
 import { format, parse } from 'date-fns'
 
 import { XMLDocument, XMLElement } from 'libxmljs'
@@ -49,8 +49,8 @@ export async function getFacturxXsd(level: FACTURX_SCHEMA_TYPE) {
     throw new Error(`Unknown Factur-X level: "${level}"`)
   }
 
-  // @todo: replace file read with module import
-  const url = resolve(join(import.meta.dirname, '..', FACTURX_SCHEMA[level]))
+  const dir = dirname(new URL(import.meta.url).pathname);
+  const url = resolve(join(dir, "..", FACTURX_SCHEMA[level]));
   const buffer = await readFile(url)
   
   return await resolveXml(buffer, {
@@ -62,8 +62,8 @@ export async function getOrderxXsd(level: ORDERX_SCHEMA_TYPE) {
     throw new Error(`Unknown Order-X level: "${level}"`)
   }
 
-  // @todo: replace file read with module import
-  const url = resolve(join(import.meta.dirname, '..', ORDERX_SCHEMA[level]))
+  const dir = dirname(new URL(import.meta.url).pathname);
+  const url = resolve(join(dir, "..", ORDERX_SCHEMA[level]));
   const buffer = await readFile(url)
 
   return await resolveXml(buffer, {
