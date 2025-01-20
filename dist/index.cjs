@@ -266,7 +266,9 @@ async function generate(options) {
     flavor: options.flavor,
     level: options.level
   })) {
-    throw new Error(`Invalid XML format (${options.flavor} - ${options.level})`);
+    throw new Error(
+      `Invalid XML format (${options.flavor} - ${options.level})`
+    );
   }
   let meta = options.meta;
   if (!meta) {
@@ -293,7 +295,9 @@ async function generate(options) {
   }
   const now = /* @__PURE__ */ new Date();
   const pdf = await resolvePdf(options.pdf);
-  await pdf.attach(xml.toString(), filename, {
+  const xmlString = xml.toString({ type: "xml" });
+  const uint8array = new TextEncoder().encode(xmlString);
+  await pdf.attach(uint8array, filename, {
     afRelationship: pdfLib.AFRelationship.Data,
     mimeType: "application/xml",
     creationDate: now,
@@ -309,7 +313,9 @@ async function generate(options) {
   pdf.setSubject(meta.subject);
   pdf.setAuthor(meta.author);
   pdf.setKeywords(meta.keywords);
-  pdf.setCreator(`${_package.pkg.name} npm lib v${_package.pkg.version} (https://github.com/${_package.pkg.repository})`);
+  pdf.setCreator(
+    `${_package.pkg.name} npm lib v${_package.pkg.version} (https://github.com/${_package.pkg.repository})`
+  );
   return await pdf.save();
 }
 async function extract(options) {
@@ -322,7 +328,9 @@ async function extract(options) {
         if (!options.flavor || options.flavor === "facturx") {
           options.flavor = "facturx";
         } else {
-          throw new Error(`Invalid flavor, expected ${options.flavor} but found facturx`);
+          throw new Error(
+            `Invalid flavor, expected ${options.flavor} but found facturx`
+          );
         }
         file = attachment;
         break;
@@ -331,7 +339,9 @@ async function extract(options) {
         if (!options.flavor || options.flavor === "orderx") {
           options.flavor = "orderx";
         } else {
-          throw new Error(`Invalid flavor, expected ${options.flavor} but found orderx`);
+          throw new Error(
+            `Invalid flavor, expected ${options.flavor} but found orderx`
+          );
         }
         file = attachment;
         break;
@@ -340,7 +350,9 @@ async function extract(options) {
         if (!options.flavor || options.flavor === "zugferd") {
           options.flavor = "zugferd";
         } else {
-          throw new Error(`Invalid flavor, expected ${options.flavor} but found zugferd`);
+          throw new Error(
+            `Invalid flavor, expected ${options.flavor} but found zugferd`
+          );
         }
         file = attachment;
         break;
