@@ -257,6 +257,13 @@ function baseInfo2PdfMetadata(info) {
   };
 }
 
+class InvalidXmlError extends Error {
+  constructor(message, errors) {
+    super(message);
+    this.errors = errors;
+    this.name = "InvalidXmlError";
+  }
+}
 async function generate(options) {
   const xml = await resolveXml(options.xml);
   options.flavor ||= getFlavor(xml);
@@ -266,8 +273,9 @@ async function generate(options) {
     flavor: options.flavor,
     level: options.level
   })) {
-    throw new Error(
-      `Invalid XML format (${options.flavor} - ${options.level})`
+    throw new InvalidXmlError(
+      `Invalid XML format (${options.flavor} - ${options.level})`,
+      xml.validationErrors
     );
   }
   let meta = options.meta;
@@ -380,6 +388,7 @@ async function check(options) {
   return xml.validate(xsd);
 }
 
+exports.InvalidXmlError = InvalidXmlError;
 exports.check = check;
 exports.extract = extract;
 exports.generate = generate;

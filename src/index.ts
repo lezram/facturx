@@ -20,6 +20,13 @@ import {
 } from "./constants";
 import { resolvePdf, resolveXml } from "./utils/resolve";
 
+export class InvalidXmlError extends Error {
+  constructor(message: string, public readonly errors: any[]) {
+    super(message);
+    this.name = "InvalidXmlError";
+  }
+}
+
 export async function generate(options: {
   pdf: string | Buffer | PDFDocument;
   xml: string | Buffer | XMLDocument;
@@ -42,8 +49,9 @@ export async function generate(options: {
       level: options.level,
     }))
   ) {
-    throw new Error(
-      `Invalid XML format (${options.flavor} - ${options.level})`
+    throw new InvalidXmlError(
+      `Invalid XML format (${options.flavor} - ${options.level})`,
+      xml.validationErrors
     );
   }
 

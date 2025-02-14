@@ -9,6 +9,10 @@ type PdfMetadata = {
     keywords: string[];
 };
 
+declare class InvalidXmlError extends Error {
+    readonly errors: any[];
+    constructor(message: string, errors: any[]);
+}
 declare function generate(options: {
     pdf: string | Buffer | PDFDocument;
     xml: string | Buffer | XMLDocument;
@@ -30,4 +34,4 @@ declare function check(options: {
     level?: string;
 }): Promise<boolean>;
 
-export { check, extract, generate };
+export { InvalidXmlError, check, extract, generate };
