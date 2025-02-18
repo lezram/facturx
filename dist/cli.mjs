@@ -1,5 +1,5 @@
 import { defineCommand, runMain as runMain$1 } from 'citty';
-import { n as name, d as description, v as version } from './shared/facturx.BF81-SG6.mjs';
+import { n as name, d as description, v as version } from './shared/facturx.CFMSzDVW.mjs';
 
 const main = defineCommand({
   meta: {

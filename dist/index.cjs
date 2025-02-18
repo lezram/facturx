@@ -1,12 +1,12 @@
 'use strict';
 
 const node_buffer = require('node:buffer');
-const _package = require('./shared/facturx.CLM8316h.cjs');
+const _package = require('./shared/facturx.NRNugK8B.cjs');
 const pdfLib = require('pdf-lib');
 const promises = require('node:fs/promises');
 const node_path = require('node:path');
 const dateFns = require('date-fns');
-const libxmljs = require('libxmljs');
+const libxmljs2 = require('libxmljs2');
 
 var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
 const extractRawAttachments = (pdfDoc) => {
@@ -72,10 +72,13 @@ const DOC_TYPE = {
 async function resolveXml(xml, options = {
   encoding: "utf8"
 }) {
-  if (xml instanceof libxmljs.XMLDocument) {
+  if (xml instanceof libxmljs2.Document) {
     return xml;
   }
-  return await libxmljs.parseXmlAsync(xml, options);
+  if (xml instanceof node_buffer.Buffer) {
+    xml = xml.toString("utf8");
+  }
+  return await libxmljs2.parseXml(xml);
 }
 async function resolvePdf(pdf, options = {}) {
   if (pdf instanceof pdfLib.PDFDocument) {
@@ -86,6 +89,9 @@ async function resolvePdf(pdf, options = {}) {
 
 const _cache = {};
 async function getXsd(flavor, level, cache = true) {
+  if (!level) {
+    throw new Error(`No level provided`);
+  }
   if (cache && flavor in _cache && level in _cache[flavor]) {
     return _cache[flavor][level];
   }
@@ -134,17 +140,23 @@ async function getOrderxXsd(level) {
 }
 function getLevel(fileDoc) {
   const namespaces = extractNamespaces(fileDoc);
-  let doc_id_xpath = fileDoc.find([
-    "//rsm:ExchangedDocumentContext",
-    "/ram:GuidelineSpecifiedDocumentContextParameter",
-    "/ram:ID"
-  ].join(""), namespaces);
-  if (!doc_id_xpath.length) {
-    doc_id_xpath = fileDoc.find([
-      "//rsm:SpecifiedExchangedDocumentContext",
+  let doc_id_xpath = fileDoc.find(
+    [
+      "//rsm:ExchangedDocumentContext",
       "/ram:GuidelineSpecifiedDocumentContextParameter",
       "/ram:ID"
-    ].join(""), namespaces);
+    ].join(""),
+    namespaces
+  );
+  if (!doc_id_xpath.length) {
+    doc_id_xpath = fileDoc.find(
+      [
+        "//rsm:SpecifiedExchangedDocumentContext",
+        "/ram:GuidelineSpecifiedDocumentContextParameter",
+        "/ram:ID"
+      ].join(""),
+      namespaces
+    );
   }
   if (!doc_id_xpath.length) {
     throw new Error("No ID found in the document");
@@ -155,7 +167,10 @@ function getLevel(fileDoc) {
   }
   const doc_id = xpathNode?.text()?.split(":");
   let level = doc_id[doc_id.length - 1];
-  const possibleValues = /* @__PURE__ */ new Set([...Object.keys(FACTURX_SCHEMA), ...Object.keys(ORDERX_SCHEMA)]);
+  const possibleValues = /* @__PURE__ */ new Set([
+    ...Object.keys(FACTURX_SCHEMA),
+    ...Object.keys(ORDERX_SCHEMA)
+  ]);
   if (!possibleValues.has(level)) {
     level = doc_id[doc_id.length - 2];
   }
@@ -179,11 +194,14 @@ function getFlavor(fileDoc) {
 async function extractBaseInfo(xml) {
   const xmlDoc = await resolveXml(xml);
   const namespaces = extractNamespaces(xmlDoc);
-  const dateXPath = xmlDoc.find([
-    "//rsm:ExchangedDocument",
-    "/ram:IssueDateTime",
-    "/udt:DateTimeString"
-  ].join(""), namespaces);
+  const dateXPath = xmlDoc.find(
+    [
+      "//rsm:ExchangedDocument",
+      "/ram:IssueDateTime",
+      "/udt:DateTimeString"
+    ].join(""),
+    namespaces
+  );
   const dateEl = dateXPath[0];
   const dateStr = dateEl?.text();
   const dateFormat = dateEl.getAttribute("format")?.value() || "102";
@@ -191,39 +209,49 @@ async function extractBaseInfo(xml) {
     "102": "yyyyMMdd",
     "203": "yyyyMMddHHmm"
   };
-  const date = dateFns.parse(dateStr, formatMap[dateFormat], /* @__PURE__ */ new Date());
-  const numberXPath = xmlDoc.find([
-    "//rsm:ExchangedDocument",
-    "/ram:ID"
-  ].join(""), namespaces);
+  const date = dateFns.parse(
+    dateStr,
+    formatMap[dateFormat],
+    /* @__PURE__ */ new Date()
+  );
+  const numberXPath = xmlDoc.find(
+    ["//rsm:ExchangedDocument", "/ram:ID"].join(""),
+    namespaces
+  );
   const numberEl = numberXPath[0];
   const number = numberEl?.text();
-  const sellerXPath = xmlDoc.find([
-    "//ram:ApplicableHeaderTradeAgreement",
-    "/ram:SellerTradeParty",
-    "/ram:Name"
-  ].join(""), namespaces);
+  const sellerXPath = xmlDoc.find(
+    [
+      "//ram:ApplicableHeaderTradeAgreement",
+      "/ram:SellerTradeParty",
+      "/ram:Name"
+    ].join(""),
+    namespaces
+  );
   const sellerEl = sellerXPath[0];
   const seller = sellerEl?.text();
-  const buyerXPath = xmlDoc.find([
-    "//ram:ApplicableHeaderTradeAgreement",
-    "/ram:BuyerTradeParty",
-    "/ram:Name"
-  ].join(""), namespaces);
+  const buyerXPath = xmlDoc.find(
+    [
+      "//ram:ApplicableHeaderTradeAgreement",
+      "/ram:BuyerTradeParty",
+      "/ram:Name"
+    ].join(""),
+    namespaces
+  );
   const buyerEl = buyerXPath[0];
   const buyer = buyerEl?.text();
-  const docTypeXPath = xmlDoc.find([
-    "//rsm:ExchangedDocument",
-    "/ram:TypeCode"
-  ].join(""), namespaces);
+  const docTypeXPath = xmlDoc.find(
+    ["//rsm:ExchangedDocument", "/ram:TypeCode"].join(""),
+    namespaces
+  );
   const docTypeEl = docTypeXPath[0];
   const docType = docTypeEl?.text();
   return {
-    "seller": seller,
-    "buyer": buyer,
-    "number": number,
-    "date": date,
-    "docType": docType
+    seller,
+    buyer,
+    number,
+    date,
+    docType
   };
 }
 function baseInfo2PdfMetadata(info) {
@@ -303,7 +331,7 @@ async function generate(options) {
   }
   const now = /* @__PURE__ */ new Date();
   const pdf = await resolvePdf(options.pdf);
-  const xmlString = xml.toString({ type: "xml" });
+  const xmlString = xml.toString();
   const uint8array = new TextEncoder().encode(xmlString);
   await pdf.attach(uint8array, filename, {
     afRelationship: pdfLib.AFRelationship.Data,

@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer';
-import { XMLDocument } from 'libxmljs';
+import { Document } from 'libxmljs2';
 import { PDFDocument } from 'pdf-lib';
 
 type PdfMetadata = {
@@ -15,7 +15,7 @@ declare class InvalidXmlError extends Error {
 }
 declare function generate(options: {
     pdf: string | Buffer | PDFDocument;
-    xml: string | Buffer | XMLDocument;
+    xml: string | Buffer | Document;
     check?: boolean;
     flavor?: string;
     level?: string;
@@ -29,7 +29,7 @@ declare function extract(options: {
     flavor?: string;
 }): Promise<readonly [string, string]>;
 declare function check(options: {
-    xml: string | Buffer | XMLDocument;
+    xml: string | Buffer | Document;
     flavor?: string;
     level?: string;
 }): Promise<boolean>;

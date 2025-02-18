@@ -3,10 +3,10 @@ import { resolve } from 'node:path';
 import { defineCommand } from 'citty';
 import { generate as generate$1 } from '../index.mjs';
 import 'node:buffer';
-import '../shared/facturx.BF81-SG6.mjs';
+import '../shared/facturx.CFMSzDVW.mjs';
 import 'pdf-lib';
 import 'date-fns';
-import 'libxmljs';
+import 'libxmljs2';
 
 const generate = defineCommand({
   meta: {

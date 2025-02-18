@@ -1,9 +1,9 @@
-import { readFile } from 'node:fs/promises'
-import { resolve, join, dirname } from 'node:path'
-import { format, parse } from 'date-fns'
+import { readFile } from "node:fs/promises";
+import { resolve, join, dirname } from "node:path";
+import { format, parse } from "date-fns";
 
-import { XMLDocument, XMLElement } from 'libxmljs'
-import { extractNamespaces } from '../utils/xml'
+import { Document as XMLDocument, Element as XMLElement } from "libxmljs2";
+import { extractNamespaces } from "../utils/xml";
 import {
   BaseInfo,
   DOC_TYPE,
@@ -13,116 +13,129 @@ import {
   ORDERX_SCHEMA,
   ORDERX_SCHEMA_TYPE,
   PdfMetadata,
-} from '../constants'
-import { resolveXml } from './resolve'
+} from "../constants";
+import { resolveXml } from "./resolve";
 
-const _cache = {} as Record<string, Record<string, XMLDocument>>
+const _cache = {} as Record<string, Record<string, XMLDocument>>;
 
-export async function getXsd(flavor: string, level: string, cache = true) {
+export async function getXsd(flavor: string, level?: string, cache = true) {
+  if (!level) {
+    throw new Error(`No level provided`);
+  }
+
   if (cache && flavor in _cache && level in _cache[flavor]) {
-    return _cache[flavor][level]
+    return _cache[flavor][level];
   }
 
   switch (flavor) {
-    case 'facturx': {
-      const schema = await getFacturxXsd(level as FACTURX_SCHEMA_TYPE)
+    case "facturx": {
+      const schema = await getFacturxXsd(level as FACTURX_SCHEMA_TYPE);
       if (cache) {
-        _cache[flavor] ||= {}
-        _cache[flavor][level] = schema
+        _cache[flavor] ||= {};
+        _cache[flavor][level] = schema;
       }
-      return schema
+      return schema;
     }
-    case 'orderx': {
-      const schema = await getOrderxXsd(level as ORDERX_SCHEMA_TYPE)
+    case "orderx": {
+      const schema = await getOrderxXsd(level as ORDERX_SCHEMA_TYPE);
       if (cache) {
-        _cache[flavor] ||= {}
-        _cache[flavor][level] = schema
+        _cache[flavor] ||= {};
+        _cache[flavor][level] = schema;
       }
-      return schema
+      return schema;
     }
     default:
-      throw new Error(`Unknown schema flavor: "${flavor}"`)
+      throw new Error(`Unknown schema flavor: "${flavor}"`);
   }
 }
 export async function getFacturxXsd(level: FACTURX_SCHEMA_TYPE) {
   if (!level || !(level in FACTURX_SCHEMA)) {
-    throw new Error(`Unknown Factur-X level: "${level}"`)
+    throw new Error(`Unknown Factur-X level: "${level}"`);
   }
 
   const dir = dirname(new URL(import.meta.url).pathname);
   const url = resolve(join(dir, "..", FACTURX_SCHEMA[level]));
-  const buffer = await readFile(url)
-  
+  const buffer = await readFile(url);
+
   return await resolveXml(buffer, {
     url,
-  })
+  });
 }
 export async function getOrderxXsd(level: ORDERX_SCHEMA_TYPE) {
   if (!level || !(level in ORDERX_SCHEMA)) {
-    throw new Error(`Unknown Order-X level: "${level}"`)
+    throw new Error(`Unknown Order-X level: "${level}"`);
   }
 
   const dir = dirname(new URL(import.meta.url).pathname);
   const url = resolve(join(dir, "..", ORDERX_SCHEMA[level]));
-  const buffer = await readFile(url)
+  const buffer = await readFile(url);
 
   return await resolveXml(buffer, {
     url,
-  })
+  });
 }
 
 export function getLevel(fileDoc: XMLDocument) {
-  const namespaces = extractNamespaces(fileDoc)
+  const namespaces = extractNamespaces(fileDoc);
 
   // Factur-X and Order-X
-  let doc_id_xpath = fileDoc.find([
-    "//rsm:ExchangedDocumentContext",
-    "/ram:GuidelineSpecifiedDocumentContextParameter",
-    "/ram:ID",
-  ].join(''), namespaces)
-  
-  if (!doc_id_xpath.length) {
-    // ZUGFeRD 1.0
-    doc_id_xpath = fileDoc.find([
-      "//rsm:SpecifiedExchangedDocumentContext",
+  let doc_id_xpath = fileDoc.find(
+    [
+      "//rsm:ExchangedDocumentContext",
       "/ram:GuidelineSpecifiedDocumentContextParameter",
       "/ram:ID",
-    ].join(''), namespaces)
+    ].join(""),
+    namespaces
+  );
+
+  if (!doc_id_xpath.length) {
+    // ZUGFeRD 1.0
+    doc_id_xpath = fileDoc.find(
+      [
+        "//rsm:SpecifiedExchangedDocumentContext",
+        "/ram:GuidelineSpecifiedDocumentContextParameter",
+        "/ram:ID",
+      ].join(""),
+      namespaces
+    );
   }
   if (!doc_id_xpath.length) {
-    throw new Error('No ID found in the document')
+    throw new Error("No ID found in the document");
   }
-  const xpathNode = doc_id_xpath[0]
+  const xpathNode = doc_id_xpath[0];
 
-  if (!('text' in xpathNode)) {
-    throw new Error('No text found in the ID node')
+  if (!("text" in xpathNode)) {
+    throw new Error("No text found in the ID node");
   }
 
-  const doc_id = xpathNode?.text()?.split(':')
-  let level = doc_id[doc_id.length - 1]
+  const doc_id = xpathNode?.text()?.split(":");
+  let level = doc_id[doc_id.length - 1];
 
-  const possibleValues = new Set([...Object.keys(FACTURX_SCHEMA), ...Object.keys(ORDERX_SCHEMA)])
+  const possibleValues = new Set([
+    ...Object.keys(FACTURX_SCHEMA),
+    ...Object.keys(ORDERX_SCHEMA),
+  ]);
   if (!possibleValues.has(level)) {
     // Order-X
-    level = doc_id[doc_id.length - 2] // skip the last part (date revision)
+    level = doc_id[doc_id.length - 2]; // skip the last part (date revision)
   }
   if (!possibleValues.has(level)) {
-    throw new Error(`Unknown level: "${level}"`)
+    throw new Error(`Unknown level: "${level}"`);
   }
-  return level
+  return level;
 }
 
 export function getFlavor(fileDoc: XMLDocument) {
-  const tag = fileDoc.root()?.name()
+  const tag = fileDoc.root()?.name();
   switch (tag) {
-    case 'SCRDMCCBDACIOMessageStructure':
-      return 'orderx'
-    case 'CrossIndustryInvoice':
-      return 'facturx'
-    case 'CrossIndustryDocument':
-      return 'zugferd'
+    case "SCRDMCCBDACIOMessageStructure":
+      return "orderx";
+    case "CrossIndustryInvoice":
+      return "facturx";
+    case "CrossIndustryDocument":
+      return "zugferd";
   }
-  throw new Error(`XML not recognized as Factur-X, Order-X or ZUGFeRD`)
+  throw new Error(`XML not recognized as Factur-X, Order-X or ZUGFeRD`);
 }
 
 // export function getOrderXLevel(fileDoc) {
@@ -166,94 +179,109 @@ export function getFlavor(fileDoc: XMLDocument) {
 //   return level
 // }
 
-export async function extractBaseInfo(xml: string | Buffer | XMLDocument): Promise<BaseInfo> {
-  const xmlDoc = await resolveXml(xml)
+export async function extractBaseInfo(
+  xml: string | Buffer | XMLDocument
+): Promise<BaseInfo> {
+  const xmlDoc = await resolveXml(xml);
 
-  const namespaces = extractNamespaces(xmlDoc)
+  const namespaces = extractNamespaces(xmlDoc);
 
-  const dateXPath = xmlDoc.find([
-    "//rsm:ExchangedDocument",
-    "/ram:IssueDateTime",
-    "/udt:DateTimeString",
-  ].join(''), namespaces)
+  const dateXPath = xmlDoc.find(
+    [
+      "//rsm:ExchangedDocument",
+      "/ram:IssueDateTime",
+      "/udt:DateTimeString",
+    ].join(""),
+    namespaces
+  );
 
-  const dateEl = dateXPath[0] as XMLElement
-  const dateStr = dateEl?.text()
-  const dateFormat = dateEl.getAttribute('format')?.value() || '102'
+  const dateEl = dateXPath[0] as XMLElement;
+  const dateStr = dateEl?.text();
+  const dateFormat = dateEl.getAttribute("format")?.value() || "102";
   const formatMap = {
-    '102': 'yyyyMMdd',
-    '203': 'yyyyMMddHHmm',
-  } as const
-  const date = parse(dateStr, formatMap[dateFormat as keyof typeof formatMap], new Date())
+    "102": "yyyyMMdd",
+    "203": "yyyyMMddHHmm",
+  } as const;
+  const date = parse(
+    dateStr,
+    formatMap[dateFormat as keyof typeof formatMap],
+    new Date()
+  );
 
-  const numberXPath = xmlDoc.find([
-    "//rsm:ExchangedDocument",
-    "/ram:ID",
-  ].join(''), namespaces)
-  const numberEl = numberXPath[0] as XMLElement
-  const number = numberEl?.text()
+  const numberXPath = xmlDoc.find(
+    ["//rsm:ExchangedDocument", "/ram:ID"].join(""),
+    namespaces
+  );
+  const numberEl = numberXPath[0] as XMLElement;
+  const number = numberEl?.text();
 
-  const sellerXPath = xmlDoc.find([
-    "//ram:ApplicableHeaderTradeAgreement",
-    "/ram:SellerTradeParty",
-    "/ram:Name",
-  ].join(''), namespaces)
-  const sellerEl = sellerXPath[0] as XMLElement
-  const seller = sellerEl?.text()
+  const sellerXPath = xmlDoc.find(
+    [
+      "//ram:ApplicableHeaderTradeAgreement",
+      "/ram:SellerTradeParty",
+      "/ram:Name",
+    ].join(""),
+    namespaces
+  );
+  const sellerEl = sellerXPath[0] as XMLElement;
+  const seller = sellerEl?.text();
 
-  const buyerXPath = xmlDoc.find([
-    "//ram:ApplicableHeaderTradeAgreement",
-    "/ram:BuyerTradeParty",
-    "/ram:Name",
-  ].join(''), namespaces)
-  const buyerEl = buyerXPath[0] as XMLElement
-  const buyer = buyerEl?.text()
+  const buyerXPath = xmlDoc.find(
+    [
+      "//ram:ApplicableHeaderTradeAgreement",
+      "/ram:BuyerTradeParty",
+      "/ram:Name",
+    ].join(""),
+    namespaces
+  );
+  const buyerEl = buyerXPath[0] as XMLElement;
+  const buyer = buyerEl?.text();
 
-  const docTypeXPath = xmlDoc.find([
-    "//rsm:ExchangedDocument",
-    "/ram:TypeCode",
-  ].join(''), namespaces)
-  const docTypeEl = docTypeXPath[0] as XMLElement
-  const docType = docTypeEl?.text() as DOC_TYPE_KEY
+  const docTypeXPath = xmlDoc.find(
+    ["//rsm:ExchangedDocument", "/ram:TypeCode"].join(""),
+    namespaces
+  );
+  const docTypeEl = docTypeXPath[0] as XMLElement;
+  const docType = docTypeEl?.text() as DOC_TYPE_KEY;
 
   return {
-    'seller': seller,
-    'buyer': buyer,
-    'number': number,
-    'date': date,
-    'docType': docType,
-  }
+    seller: seller,
+    buyer: buyer,
+    number: number,
+    date: date,
+    docType: docType,
+  };
 }
 
 export function baseInfo2PdfMetadata(info: BaseInfo): PdfMetadata {
-  let title = ''
-  let subject = ''
-  let doc_x = ''
-  let author = ''
+  let title = "";
+  let subject = "";
+  let doc_x = "";
+  let author = "";
 
-  const doc_type_name = DOC_TYPE[info.docType] || 'Invoice'
-  const date = format(info.date, 'yyyy-MM-dd')
+  const doc_type_name = DOC_TYPE[info.docType] || "Invoice";
+  const date = format(info.date, "yyyy-MM-dd");
 
   // Order Response
-  if (info.docType === '231') {
-    title = `${info.seller}: Order Response on Order ${info.number} from ${info.buyer}`
-    subject = `Response of ${info.seller} on ${date} to order ${info.number} from ${info.buyer}`
-    doc_x = `Order-X`
-    author = info.seller
+  if (info.docType === "231") {
+    title = `${info.seller}: Order Response on Order ${info.number} from ${info.buyer}`;
+    subject = `Response of ${info.seller} on ${date} to order ${info.number} from ${info.buyer}`;
+    doc_x = `Order-X`;
+    author = info.seller;
   }
   // Order & Order Change
-  else if (['220', '230'].includes(info.docType)) {
-    title = `${info.buyer}: ${doc_type_name} ${info.number}`
-    subject = `${doc_type_name} ${info.number} issued by ${info.buyer} on ${date}`
-    doc_x = `Order-X`
-    author = info.buyer
+  else if (["220", "230"].includes(info.docType)) {
+    title = `${info.buyer}: ${doc_type_name} ${info.number}`;
+    subject = `${doc_type_name} ${info.number} issued by ${info.buyer} on ${date}`;
+    doc_x = `Order-X`;
+    author = info.buyer;
   }
   // Invoice & Refund
   else {
-    title = `${info.seller}: ${doc_type_name} ${info.number}`
-    subject = `${doc_type_name} ${info.number} dated ${date} issued by ${info.seller}`
-    doc_x = `Factur-X`
-    author = info.seller
+    title = `${info.seller}: ${doc_type_name} ${info.number}`;
+    subject = `${doc_type_name} ${info.number} dated ${date} issued by ${info.seller}`;
+    doc_x = `Factur-X`;
+    author = info.seller;
   }
 
   return {
@@ -261,5 +289,5 @@ export function baseInfo2PdfMetadata(info: BaseInfo): PdfMetadata {
     subject,
     author,
     keywords: [doc_type_name, doc_x],
-  }
+  };
 }

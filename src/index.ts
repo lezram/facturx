@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import pkg from "../package.json" assert { type: "json" };
 
-import { XMLDocument } from "libxmljs";
+import { Document as XMLDocument } from "libxmljs2";
 import { PDFDocument, AFRelationship } from "pdf-lib";
 
 import { extractAttachments } from "./utils/pdf";
@@ -85,7 +85,7 @@ export async function generate(options: {
   const now = new Date();
   const pdf = await resolvePdf(options.pdf);
 
-  const xmlString = xml.toString({ type: "xml" });
+  const xmlString = xml.toString(); //{ type: "xml" }
   const uint8array = new TextEncoder().encode(xmlString);
 
   await pdf.attach(uint8array, filename, {

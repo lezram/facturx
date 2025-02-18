@@ -46,7 +46,7 @@ const scripts = {
 const dependencies = {
 	citty: "^0.1.6",
 	"date-fns": "^3.6.0",
-	libxmljs: "^1.0.11",
+	libxmljs2: "0.35.0",
 	"pdf-lib": "^1.17.1"
 };
 const devDependencies = {

@@ -1,4 +1,4 @@
-import { XMLDocument } from "libxmljs"
+import { Document as XMLDocument } from "libxmljs2";
 
 const xmlnsRe = /xmlns:([^=]+)="([^"]+)"/g
 

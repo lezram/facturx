@@ -5,10 +5,10 @@ const node_path = require('node:path');
 const citty = require('citty');
 const index = require('../index.cjs');
 require('node:buffer');
-require('../shared/facturx.CLM8316h.cjs');
+require('../shared/facturx.NRNugK8B.cjs');
 require('pdf-lib');
 require('date-fns');
-require('libxmljs');
+require('libxmljs2');
 
 const extract = citty.defineCommand({
   meta: {
