@@ -69,16 +69,16 @@ const DOC_TYPE = {
   "381": "Refund"
 };
 
-async function resolveXml(xml, options = {
-  encoding: "utf8"
-}) {
+async function resolveXml(xml, options = {}) {
   if (xml instanceof libxmljs2.Document) {
     return xml;
   }
   if (xml instanceof node_buffer.Buffer) {
     xml = xml.toString("utf8");
   }
-  return await libxmljs2.parseXml(xml);
+  const opt = options;
+  opt.baseUrl = options.url;
+  return await libxmljs2.parseXml(xml, opt);
 }
 async function resolvePdf(pdf, options = {}) {
   if (pdf instanceof pdfLib.PDFDocument) {

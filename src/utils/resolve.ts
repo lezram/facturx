@@ -8,9 +8,7 @@ import { LoadOptions, PDFDocument } from "pdf-lib";
 
 export async function resolveXml(
   xml: string | Buffer | XMLDocument,
-  options = {
-    encoding: "utf8",
-  }
+  options: { url?: string; encoding?: string } = {}
 ): Promise<XMLDocument> {
   if (xml instanceof XMLDocument) {
     return xml;
@@ -20,7 +18,10 @@ export async function resolveXml(
     xml = xml.toString("utf8");
   }
 
-  return await parseXmlAsync(xml as string);
+  const opt = options as unknown as XMLParseOptions;
+  opt.baseUrl = options.url;
+
+  return await parseXmlAsync(xml as string, opt);
 }
 
 export async function resolvePdf(
