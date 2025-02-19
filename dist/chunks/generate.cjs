@@ -5,7 +5,7 @@ const node_path = require('node:path');
 const citty = require('citty');
 const index = require('../index.cjs');
 require('node:buffer');
-require('../shared/facturx.NRNugK8B.cjs');
+require('../shared/facturx.FKkurjps.cjs');
 require('pdf-lib');
 require('date-fns');
 require('libxmljs2');

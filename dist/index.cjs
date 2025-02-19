@@ -1,7 +1,7 @@
 'use strict';
 
 const node_buffer = require('node:buffer');
-const _package = require('./shared/facturx.NRNugK8B.cjs');
+const _package = require('./shared/facturx.FKkurjps.cjs');
 const pdfLib = require('pdf-lib');
 const promises = require('node:fs/promises');
 const node_path = require('node:path');

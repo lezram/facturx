@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { defineCommand } from 'citty';
 import { check as check$1 } from '../index.mjs';
 import 'node:buffer';
-import '../shared/facturx.CFMSzDVW.mjs';
+import '../shared/facturx.Dn5cg3YR.mjs';
 import 'pdf-lib';
 import 'date-fns';
 import 'libxmljs2';

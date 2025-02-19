@@ -1,3 +1,5 @@
+'use strict';
+
 const name = "@lezram/facturx";
 const version = "0.2.0";
 const description = "Factur-X and Order-X generation library for European e-invoicing standard";
@@ -13,7 +15,7 @@ const keywords = [
 ];
 const license = "MIT";
 const type = "module";
-const exports = {
+const exports$1 = {
 	".": {
 		types: "./dist/index.d.ts",
 		"import": "./dist/index.mjs",
@@ -44,7 +46,7 @@ const scripts = {
 const dependencies = {
 	citty: "^0.1.6",
 	"date-fns": "^3.6.0",
-	libxmljs2: "0.35.0",
+	libxmljs2: "github:lezram/libxmljs2",
 	"pdf-lib": "^1.17.1"
 };
 const devDependencies = {
@@ -61,7 +63,7 @@ const pkg = {
 	keywords: keywords,
 	license: license,
 	type: type,
-	exports: exports,
+	exports: exports$1,
 	main: main,
 	types: types,
 	files: files,
@@ -71,4 +73,7 @@ const pkg = {
 	devDependencies: devDependencies
 };
 
-export { description as d, name as n, pkg as p, version as v };
+exports.description = description;
+exports.name = name;
+exports.pkg = pkg;
+exports.version = version;

@@ -1,7 +1,7 @@
 'use strict';
 
 const citty = require('citty');
-const _package = require('./shared/facturx.NRNugK8B.cjs');
+const _package = require('./shared/facturx.FKkurjps.cjs');
 
 const main = citty.defineCommand({
   meta: {

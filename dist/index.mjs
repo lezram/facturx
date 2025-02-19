@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer';
-import { p as pkg } from './shared/facturx.CFMSzDVW.mjs';
+import { p as pkg } from './shared/facturx.Dn5cg3YR.mjs';
 import { PDFName, PDFDict, PDFStream, decodePDFRawStream, PDFArray, PDFDocument, AFRelationship } from 'pdf-lib';
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve, join } from 'node:path';
